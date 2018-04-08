@@ -10,26 +10,19 @@ function Homography()
     Matrix1To2 = pinv(transpose(Matrix1To2) * Matrix1To2) * transpose(Matrix1To2) * Basis1;
     Matrix1To2 = [transpose(Matrix1To2(1:3)); transpose(Matrix1To2(4:6)); transpose(Matrix1To2(7:8)), 1];
     
-    [Matrix2To1, Basis2] = SetInhomographyMatrix(PosData(5:8,:,:), PosData(1:4,:,:));
-    Matrix2To1 = pinv(transpose(Matrix2To1) * Matrix2To1) * transpose(Matrix2To1) * Basis2;
-    Matrix2To1 = [transpose(Matrix2To1(1:3)); transpose(Matrix2To1(4:6)); transpose(Matrix2To1(7:8)), 1];
+    Matrix2To1 = pinv(Matrix1To2);
     
     % 圖片
     img = imread('img.jpg');
-    img = imresize(img, 0.25);
+    %img = imresize(img, 0.25);
     [rows, cols, channels] = size(img);
     imgClone = img;
-    
-    % 要 Mapping 的貼圖
-    MappingTexture1 = zeros(rows, cols, channels, 'uint8');
-    MappingTexture2 = zeros(rows, cols, channels, 'uint8');
     
     % 取出要的部分
     for i = 1: rows
         for j = 1: cols
             dot = [i, j, 1];
             if CheckIsInsideArea(PosData(1:4,:,:), dot(1:2))
-                %MappingTexture1(i,j,:) = img(i, j, :);
                 m2Dot = Matrix1To2 * transpose(dot);
                 [x ,y] = DivideByZ(m2Dot);
                 imgClone(i, j,:) = img(x,y,:);
@@ -38,12 +31,15 @@ function Homography()
             if CheckIsInsideArea(PosData(5:8,:,:), dot(1:2))
                 m2Dot = Matrix2To1 * transpose(dot);
                 [x ,y] = DivideByZ(m2Dot);
+                %disp([x, y]);
+                
                 imgClone(i, j,:) = img(x,y,:);
             end
         end
     end
     
-    imshow(imgClone);
+    %imshow(imgClone);
+    imwrite(imgClone, './M10515102.jpg')
 end
 
 
@@ -53,7 +49,8 @@ function pos = PosDataTXT_2_Pos(vector)
     
     pos = zeros(len/2, 3);
     for i = 1:len /2
-        pos(i,:) = [vector(i * 2 - 1) / 4, vector(i * 2) / 4, 1];
+        pos(i,:) = [vector(i * 2 - 1), vector(i * 2), 1];
+        %pos(i,:) = [vector(i * 2 - 1) / 4, vector(i * 2) / 4, 1];
     end
 end
 
